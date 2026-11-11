@@ -1,0 +1,18 @@
+name: Inspect launcher source
+
+on:
+  push:
+    branches: [inspect-source]
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract and show project files
+        run: |
+          unzip HY300Launcher-ChromeOS.zip -d extracted
+          echo "=== FILE LIST ==="
+          find extracted/HY300Launcher/HY300Launcher -type f | sort
+          echo "=== SOURCE CONTENTS ==="
+          find extracted/HY300Launcher/HY300Launcher -type f \( -name '*.kt' -o -name '*.xml' -o -name '*.gradle.kts' -o -name 'gradle.properties' -o -name 'README.md' \) -print -exec sh -c 'echo "----- $1"; sed -n "1,260p" "$1"' _ {} \;
