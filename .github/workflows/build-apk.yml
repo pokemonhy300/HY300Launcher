@@ -9,36 +9,38 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - name: Configure Java
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Extract project
-        run: |
-          unzip HY300Launcher-ChromeOS.zip -d extracted
-          cd extracted/HY300Launcher/HY300Launcher
-          echo "PROJECT_DIR=$PWD" >> $GITHUB_ENV
-
       - name: Configure Android SDK
-        uses: android-actions/setup-android@v3
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          SDKMANAGER=$(find "$ANDROID_HOME/cmdline-tools" -name sdkmanager -type f | head -n 1)
+          chmod +x "$SDKMANAGER"
+          yes | "$SDKMANAGER" --licenses || true
+          "$SDKMANAGER" "platforms;android-35" "build-tools;35.0.0"
 
-      - name: Configure Gradle
+      - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
 
       - name: Build APK
         run: |
-          cd "$PROJECT_DIR"
+          unzip HY300Launcher-ChromeOS.zip -d extracted
+          cd extracted/HY300Launcher/HY300Launcher
           gradle assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: HY300Launcher
+          name: HY300Launcher-APK
           path: extracted/HY300Launcher/HY300Launcher/app/build/outputs/apk/debug/app-debug.apk
