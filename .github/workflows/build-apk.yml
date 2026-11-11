@@ -1,10 +1,12 @@
-
 name: Build HY300 Launcher
 
 on:
   workflow_dispatch:
   push:
     branches: [main]
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -33,9 +35,24 @@ jobs:
         with:
           gradle-version: '8.9'
 
+      - name: Extract project
+        run: |
+          unzip -o HY300Launcher-ChromeOS.zip -d extracted
+          mkdir -p android-project
+          cp -R extracted/HY300Launcher/HY300Launcher/. android-project/
+
+      - name: Publish extracted source to repository
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add android-project
+          if ! git diff --cached --quiet; then
+            git commit -m "Add extracted Android project sources"
+            git push
+          fi
+
       - name: Build APK
         run: |
-          unzip HY300Launcher-ChromeOS.zip -d extracted
           cd extracted/HY300Launcher/HY300Launcher
           gradle assembleDebug
 
